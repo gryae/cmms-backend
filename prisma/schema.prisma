@@ -31,23 +31,23 @@ model User {
   role      Role
   createdAt DateTime @default(now())
 
-  tenant     Tenant             @relation(fields: [tenantId], references: [id])
-  workOrders WorkOrder[]        @relation("AssignedWorkOrders") // 👈 TAMBAH INI
-  comments   WorkOrderComment[] // 👈 TAMBAH INI
-  createdWorkOrders WorkOrder[] @relation("CreatedWorkOrders") // ✅
-
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  workOrders        WorkOrder[]        @relation("AssignedWorkOrders") // 👈 TAMBAH INI
+  comments          WorkOrderComment[] // 👈 TAMBAH INI
+  createdWorkOrders WorkOrder[]        @relation("CreatedWorkOrders") // ✅
 }
-model Asset {
-  id        String   @id @default(uuid())
-  tenantId  String
 
-  name      String
-  code      String
-  branch    String
-  location  String
+model Asset {
+  id       String @id @default(uuid())
+  tenantId String
+
+  name            String
+  code            String
+  branch          String
+  location        String
   procurementYear Int
 
-  category  String?
+  category String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -55,11 +55,8 @@ model Asset {
   tenant     Tenant      @relation(fields: [tenantId], references: [id])
   workOrders WorkOrder[]
 
-  @@unique([tenantId,code])
+  @@unique([tenantId, code])
 }
-
-
-
 
 enum WorkOrderStatus {
   OPEN
@@ -86,7 +83,8 @@ model WorkOrder {
 
   assetId    String?
   assignedTo String?
-  createdBy String?
+  createdBy  String?
+  creator    User?   @relation("CreatedWorkOrders", fields: [createdBy], references: [id])
 
   createdAt DateTime  @default(now())
   dueDate   DateTime?
