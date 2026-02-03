@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Order Assigned</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:40px 10px;">
+        <table width="600" border="0" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);border:1px solid #e2e8f0;">
+          
+          <tr>
+            <td style="background-color:#4c1d95; padding:60px 24px; text-align:center;">
+              <div style="font-size:48px; font-weight:900; letter-spacing:-2px; line-height:1; margin-bottom:12px;">
+                <span style="color:#ffffff;">Mainta</span><span style="color:#fb923c;">INA</span>
+              </div>
+              <div style="color:#ddd6fe; font-size:14px; font-weight:500; text-transform:uppercase; letter-spacing:3px; margin-top:10px;">
+                Maintenance Management System
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#fcd34d; padding:10px; text-align:center; color:#92400e; font-size:13px; font-weight:700; text-transform:uppercase;">
+              New Assignment Received 👷
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:45px 40px; color:#334155; line-height:1.6;">
+              <h3 style="margin-top:0; color:#1e293b; font-size:20px;">Work Order Assignment</h3>
+              <p style="font-size:16px;">
+                Halo, <br>Ada tugas baru untuk Anda. Work order <strong style="color:#4c1d95;">{{title}}</strong> telah diterbitkan dalam sistem.
+              </p>
+
+              <div style="background-color:#ffffff; border:2px solid #f1f5f9; border-radius:16px; padding:25px; margin:30px 0;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="font-size:15px;">
+                  <tr>
+                    <td width="40%" style="padding-bottom:15px; color:#64748b; font-weight:500;">Technician</td>
+                    <td style="padding-bottom:15px; color:#1e293b; font-weight:700;">{{technician}}</td>
+                  </tr>
+                  <tr>
+                    <td width="40%" style="padding-bottom:15px; color:#64748b; font-weight:500;">Creator</td>
+                    <td style="padding-bottom:15px; color:#1e293b;">{{creatorEmail}}</td>
+                  </tr>
+                  {{#if asset}}
+                  <tr>
+                    <td width="40%" style="color:#64748b; font-weight:500;">Asset Unit</td>
+                    <td style="color:#1e293b; font-weight:700;">{{asset}}</td>
+                  </tr>
+                  {{/if}}
+                </table>
+              </div>
+
+              <div style="text-align:center; margin-top:40px;">
+                <a href="{{appurl}}/work-orders/{{workOrderId}}"
+                   style="background-color:#4c1d95; color:#ffffff; padding:18px 40px; border-radius:12px; text-decoration:none; font-weight:700; font-size:16px; display:inline-block; box-shadow:0 6px 20px rgba(76, 29, 149, 0.25);">
+                  VIEW WORK ORDER
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 40px 40px 40px; text-align:center;">
+              <p style="font-size:12px; color:#94a3b8; margin:0; border-top:1px solid #f1f5f9; padding-top:20px;">
+                &copy; 2024 **MaintaINA** Tech Solutions. <br>
+                Jl. Professionalism No. 1, Indonesia.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
