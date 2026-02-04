@@ -17,7 +17,7 @@ export class WorkOrderAttachmentsService {
     const filePath = path.join(uploadsDir, file.originalname);
 
     fs.writeFileSync(filePath, file.buffer);
-    const fileUrl = '/uploads/${file.originalname}';
+    const fileUrl = `/uploads/${file.originalname}`;
     return this.prisma.workOrderAttachment.create({
       data: {
         workOrderId: woId,
