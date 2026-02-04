@@ -17,12 +17,12 @@ export class WorkOrderAttachmentsService {
     const filePath = path.join(uploadsDir, file.originalname);
 
     fs.writeFileSync(filePath, file.buffer);
-    const baseUrl = 'http://localhost:3001';
+    const fileUrl = '/uploads/${file.originalname}';
     return this.prisma.workOrderAttachment.create({
       data: {
         workOrderId: woId,
         fileName: file.originalname,
-        fileUrl: `${baseUrl}/uploads/${file.originalname}`,
+        fileUrl,
         mimeType: file.mimetype,
         size: file.size,
       },
