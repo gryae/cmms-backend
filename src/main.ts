@@ -9,14 +9,28 @@ async function bootstrap() {
       AppModule,
     );
 
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',')
-      : ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  });
+  // app.enableCors({
+  //   origin: process.env.CORS_ORIGIN
+  //     ? process.env.CORS_ORIGIN.split(',')
+  //     : ['http://localhost:3000'],
+  //   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  //   allowedHeaders: ['Content-Type', 'Authorization'],
+  //   credentials: true,
+  // });
+
+    app.enableCors({
+    origin: (origin,callback) => {
+      const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'+ origin));
+    }
+  },
+credentials: true,
+methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
