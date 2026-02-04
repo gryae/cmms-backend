@@ -35,7 +35,7 @@ private async sendAssignEmail(params: {
     select: { email: true },
   });
 
-  await this.mailService.sendWorkOrderAssigned({
+   this.mailService.sendWorkOrderAssigned({
     to: [
       technician.email,
       creator.email,
@@ -104,7 +104,7 @@ const admins = await this.prisma.user.findMany({
   select: { email: true },
 });
 
-await this.mailService.sendWorkOrderCreated({
+this.mailService.sendWorkOrderCreated({
   to: [
     ...admins.map(a => a.email),
     creator.email,
@@ -115,10 +115,11 @@ await this.mailService.sendWorkOrderCreated({
   asset: wo.asset?.name,
   dueDate: wo.dueDate?.toDateString(),
   workOrderId: wo.id,
-});
+})
+.catch(err=>console.warn('Failed to send work order created email:', err.message));
 
 if (data.assignedTo){ 
-  await this.sendAssignEmail({
+   this.sendAssignEmail({
     tenantId,
     wo,
     technicianId: data.assignedTo,
@@ -207,7 +208,7 @@ console.log('ASSIGN EMAIL DATA:', {
   admins: admins.map(a => a.email),
 });
 
-  await this.sendAssignEmail({
+   this.sendAssignEmail({
     tenantId,
     wo: updated,
     technicianId,
@@ -262,14 +263,15 @@ console.log('ASSIGN EMAIL DATA:', {
       wo.assignee?.email,
     ].filter(Boolean) as string[];
 
-    await this.mailService.sendWorkOrderDone({
+     this.mailService.sendWorkOrderDone({
       to: emails,
       title: wo.title,
       technician: wo.assignee?.email ?? 'Technician',
       creator: creator?.email ?? 'Creator',
       asset: wo.asset?.name,
       workOrderId: wo.id,
-    });
+    })
+    .catch(err=>console.warn('Failed to send work order done email:', err.message));
   }
 
   return updated;
@@ -381,7 +383,7 @@ async update(
     nextAssigned &&
     nextAssigned !== prevAssigned
   ) {
-    await this.sendAssignEmail({
+     this.sendAssignEmail({
       tenantId,
       wo: { ...wo, assignedTo: nextAssigned },
       technicianId: nextAssigned,
