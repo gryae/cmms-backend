@@ -23,7 +23,12 @@ export class WorkOrderAttachmentsController {
 
   @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
   @Post(':id/attachments')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file',{
+    limits: {
+       fileSize: 1 * 1024 * 1024, 
+      }, // 1MB
+  }),
+)
   upload(
     @Req() req: any,
     @Param('id') id: string,
