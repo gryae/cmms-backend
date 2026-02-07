@@ -3,6 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Priority, WorkOrderStatus } from '@prisma/client';
 import { MailService } from 'src/mail/mail.service';
 
+
+function diffDays(from: Date, to: Date) {
+  const start = new Date(from);
+  const end = new Date(to);
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  return Math.max(Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)), 0);
+}
+
+
+
 @Injectable()
 export class WorkOrderService {
   constructor(private prisma: PrismaService,
@@ -131,22 +144,69 @@ if (data.assignedTo){
 }
 
 
-  findAll(tenantId: string) {
-    return this.prisma.workOrder.findMany({
-      where: { tenantId },
-      include: {
-        asset: true,
-        assignee: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
+async findAll(tenantId: string) {
+  const workOrders = await this.prisma.workOrder.findMany({
+    where: { tenantId },
+    include: {
+      asset: true,
+      comments: true, // 🔴 WAJIB
+      assignee: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
         },
       },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const now = new Date();
+
+  return workOrders.map((wo) => {
+    // ================= PROGRESS DAYS =================
+    let progressDays = 0;
+
+    if (wo.status === 'DONE') {
+      const doneComment = wo.comments
+        ?.filter((c) => c.message.includes('Status updated to DONE'))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime(),
+        )[0];
+
+      if (doneComment) {
+        progressDays = diffDays(
+          new Date(wo.createdAt),
+          new Date(doneComment.createdAt),
+        );
+      }
+    } else {
+      progressDays = diffDays(new Date(wo.createdAt), now);
+    }
+
+    // ================= OVERDUE =================
+    let isOverdue = false;
+    let overdueDays = 0;
+
+    if (wo.dueDate) {
+      const due = new Date(wo.dueDate);
+      if (now > due && wo.status !== 'DONE') {
+        isOverdue = true;
+        overdueDays = diffDays(due, now);
+      }
+    }
+
+    return {
+      ...wo,
+      progressDays,
+      isOverdue,
+      overdueDays,
+    };
+  });
+}
+
 
 async assignTechnician(
   tenantId: string,
@@ -219,6 +279,7 @@ console.log('ASSIGN EMAIL DATA:', {
 
 
 
+
   async updateStatus(
   tenantId: string,
   workOrderId: string,
@@ -231,6 +292,13 @@ console.log('ASSIGN EMAIL DATA:', {
       assignee: { select: { email: true } },
     },
   });
+
+  const data: any = { status };
+  if (status === WorkOrderStatus.DONE) {
+    data.completedAt = new Date();
+  } else {
+    data.completedAt = null;
+  }
 
   if (!wo || wo.tenantId !== tenantId) {
     throw new ForbiddenException('Access denied');

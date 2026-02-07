@@ -80,6 +80,7 @@ model WorkOrder {
   description String?
   priority    Priority
   status      WorkOrderStatus @default(OPEN)
+  completedAt DateTime?
 
   assetId    String?
   assignedTo String?
