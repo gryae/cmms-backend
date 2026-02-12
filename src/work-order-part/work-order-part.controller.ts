@@ -18,7 +18,7 @@ import { Roles } from '../auth/roles.decorator';
 export class WorkOrderPartController {
   constructor(private service: WorkOrderPartService) {}
 
-  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
+  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN','USER')
   @Post(':id/parts')
   consume(
     @Req() req: any,
@@ -44,7 +44,7 @@ export class WorkOrderPartController {
     );
   }
 
-@Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
+@Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN','USER')
 @Delete('parts/:usageId')
 remove(
   @Req() req: any,

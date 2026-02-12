@@ -30,7 +30,7 @@ export class AssetController {
   constructor(private service: AssetService) {}
 
   // ================= CREATE =================
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER','TECHNICIAN')
   @Post()
   create(@Req() req: any, @Body() body: any) {
     return this.service.create(req.user.tenantId, {
@@ -56,7 +56,7 @@ export class AssetController {
   }
 
   // ================= UPDATE =================
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER','TECHNICIAN')
   @Patch(':id')
   update(
     @Req() req: any,

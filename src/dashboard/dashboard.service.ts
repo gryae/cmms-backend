@@ -6,8 +6,26 @@ import { WorkOrderStatus, Priority } from '@prisma/client';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
+
+
   async summary(tenantId: string) {
     const now = new Date();
+    //console.log(now);
+    const debug = await this.prisma.workOrder.findMany({
+      where: {
+        tenantId,
+        dueDate:{
+          not:null,
+          lt: new Date(),
+        }
+      },
+      select: {
+        id:true,
+        status:true,
+        dueDate:true,
+      }
+    });
+    //console.log('DEBUG OVERDUE WOs:', debug);
 
     const [
       total,
@@ -16,6 +34,7 @@ export class DashboardService {
       done,
       overdue,
     ] = await Promise.all([
+      
       this.prisma.workOrder.count({ where: { tenantId } }),
       this.prisma.workOrder.count({
         where: { tenantId, status: WorkOrderStatus.OPEN },
@@ -29,9 +48,8 @@ export class DashboardService {
       this.prisma.workOrder.count({
         where: {
           tenantId,
-          status: { in: [WorkOrderStatus.OPEN, WorkOrderStatus.IN_PROGRESS] },
-          // OPTIONAL: kalau nanti ada dueDate
-          // dueDate: { lt: now },
+          status: { in: [WorkOrderStatus.OPEN, WorkOrderStatus.ASSIGNED, WorkOrderStatus.IN_PROGRESS] },
+          dueDate: { not:null, lt: new Date() },
         },
       }),
     ]);
@@ -86,7 +104,7 @@ export class DashboardService {
       ASSIGNED: 0,
       IN_PROGRESS: 0,
       DONE: 0,
-      CLOSED: 0,
+      OVERDUE:0,
     };
 
     result.forEach(r => {
@@ -106,6 +124,7 @@ export class DashboardService {
         id: true,
         title: true,
         createdAt: true,
+        status:true,
       },
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -140,15 +159,25 @@ export class DashboardService {
     timestamp: wo.createdAt,
   }));
 
+  const statusEvents = workOrders
+    .filter((wo) => wo.status !== 'OPEN')
+    .map((wo) => ({
+      id: `wo-status-${wo.id}`,
+      type: 'status_changed',
+      workOrderId: wo.id, // ✅ PENTING
+      message: `Work Order "${wo.title}" status changed to ${wo.status}`,
+      timestamp: wo.createdAt,
+    }));
+
   const commentEvents = comments.map((c) => ({
     id: `comment-${c.id}`,
     type: 'comment',
     workOrderId: c.workOrder.id, // ✅ PENTING
-    message: `${c.user.email} commented on "${c.workOrder.title}"`,
+    message: `${c.user.email} commented on "${c.workOrder.title}" - "${c.message}"`,
     timestamp: c.createdAt,
   }));
 
-  return [...woEvents, ...commentEvents]
+  return [...woEvents, ...commentEvents, ...statusEvents]
     .sort(
       (a, b) =>
         new Date(b.timestamp).getTime() -

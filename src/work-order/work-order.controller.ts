@@ -20,7 +20,7 @@ import { RolesGuard } from '../auth/roles.guard';
 @UseGuards(JwtAuthGuard,RolesGuard)
 export class WorkOrderController {
   constructor(private service: WorkOrderService) {}
-@Roles('ADMIN', 'SUPERVISOR')
+@Roles('ADMIN', 'SUPERVISOR','USER')
   @Post() 
   create(@Req() req: any, @Body() body: any) {
     return this.service.create(req.user.tenantId,req.user.userId, {
@@ -38,7 +38,7 @@ export class WorkOrderController {
     return this.service.findAll(req.user.tenantId);
   }
 
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER')
   @Patch(':id/assign')
   assign(
     @Req() req: any,
@@ -52,7 +52,7 @@ export class WorkOrderController {
     );
   }
 
-  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
+  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN','USER')
   @Patch(':id/status')
   updateStatus(
     @Req() req: any,
@@ -63,10 +63,11 @@ export class WorkOrderController {
       req.user.tenantId,
       id,
       status,
+      req.user.userId
     );
   }
 
-@Roles('ADMIN', 'SUPERVISOR')
+@Roles('ADMIN', 'SUPERVISOR','USER')
 @Delete(':id')
 delete(
   @Req() req: any,
@@ -79,7 +80,7 @@ delete(
 }
 
 
-@Roles('ADMIN', 'SUPERVISOR')
+@Roles('ADMIN', 'SUPERVISOR','USER')
 @Patch(':id')
 update(
   @Req() req: any,

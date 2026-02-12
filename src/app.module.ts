@@ -14,7 +14,7 @@ import { WorkOrderPartModule } from './work-order-part/work-order-part.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WorkOrderCommentsModule } from './work-order-comments/work-order-comments.module';
 import { ConfigModule } from '@nestjs/config';
-
+import { PushModule } from './notification/push.module';
 
 @Module({
   imports: [
@@ -34,6 +34,7 @@ import { ConfigModule } from '@nestjs/config';
     WorkOrderPartModule,
     ScheduleModule.forRoot(),
     WorkOrderCommentsModule,
+    PushModule,
   ],
   controllers: [AppController],
   providers: [AppService],

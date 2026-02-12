@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Body, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Priority, WorkOrderStatus } from '@prisma/client';
+import { Priority, Role, WorkOrderStatus } from '@prisma/client';
 import { MailService } from 'src/mail/mail.service';
-
+import { PushService } from 'src/notification/push.service';
 
 function diffDays(from: Date, to: Date) {
   const start = new Date(from);
@@ -18,9 +18,35 @@ function diffDays(from: Date, to: Date) {
 
 @Injectable()
 export class WorkOrderService {
-  constructor(private prisma: PrismaService,
+  constructor(
+    private prisma: PrismaService,
     private mailService: MailService,
+    private pushService: PushService,
   ) {}
+
+
+private async sendPushToUsers(
+  userIds: string[],
+  payload: { title: string; body: string; url?: string },
+) {
+  const users = await this.prisma.user.findMany({
+    where: { id: { in: userIds } },
+    include: { subscription: true },
+  });
+
+  const uniqueUserIds = [...new Set(userIds)];
+
+  for (const user of users){
+    for (const sub of user.subscription){
+      this.pushService.sendNotification(
+        {endpoint: sub.endpoint,keys: sub.keys as any},
+        payload
+      ).catch(err=>console.warn(`Failed to send push notification to user ${user.id}:`, err.message));
+    }
+  }
+}
+
+
 
 private async sendAssignEmail(params: {
   tenantId: string;
@@ -111,11 +137,36 @@ const wo = await this.prisma.workOrder.create({
   },
 });
 
+// //ambil admin untuk notification
+// const admins1 = await this.prisma.user.findMany({
+//   where: { tenantId, role: 'ADMIN' },
+//   include: { subscription: true },
+// });
+
+// for (const admin of admins1) {
+//   for (const sub of admin.subscription) {
+//     this.pushService.sendNotification(
+//       {endpoint: sub.endpoint,keys: sub.keys as any},
+//       {title:'Work Order Created',body:`A new work order "${wo.title}" has been created.`,url:`/work-orders/${wo.id}` })
+//     .catch(err=>console.warn('Failed to send push notification to admin:', err.message));
+//   }
+// }
+
+
+
 // ambil admin
 const admins = await this.prisma.user.findMany({
   where: { tenantId, role: 'ADMIN' },
-  select: { email: true },
+  select: { email: true , id:true},
 });
+
+const userIds = [ ...admins.map(a => a.id), creatorUserId ];
+await this.sendPushToUsers(userIds, {
+  title: 'Work Order Created',
+  body: `A new work order "${wo.title}" has been created.`,
+  url: `/work-orders/${wo.id}`,
+});
+
 
 this.mailService.sendWorkOrderCreated({
   to: [
@@ -140,6 +191,8 @@ if (data.assignedTo){
 }
 
 
+
+
   return wo;
 }
 
@@ -157,6 +210,13 @@ async findAll(tenantId: string) {
           role: true,
         },
       },
+      creator:{
+        select:{
+          id:true,
+          email:true,
+          role:true,
+          name:true,
+      }  },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -203,6 +263,7 @@ async findAll(tenantId: string) {
       progressDays,
       isOverdue,
       overdueDays,
+      createdBy:wo.creator,
     };
   });
 }
@@ -262,16 +323,33 @@ if (!creator) {
       status: WorkOrderStatus.ASSIGNED,
     },
   });
-console.log('ASSIGN EMAIL DATA:', {
-  technician: technician.email,
-  creator: creator.email,
-  admins: admins.map(a => a.email),
-});
+// console.log('ASSIGN EMAIL DATA:', {
+//   technician: technician.email,
+//   creator: creator.email,
+//   admins: admins.map(a => a.email),
+// });
 
    this.sendAssignEmail({
     tenantId,
     wo: updated,
     technicianId,
+  });
+
+  const adminUsers = await this.prisma.user.findMany({
+    where: { tenantId, role: 'ADMIN' },
+    select: { id: true },
+  });
+
+  const pushUserIds = [
+    ...adminUsers.map(a => a.id),
+    technicianId,
+    wo.createdBy,
+  ];
+
+  await this.sendPushToUsers(pushUserIds, {
+    title: 'Work Order Assigned',
+    body: `Work order "${wo.title}" has been assigned to ${technician.email}.`,
+    url: `/work-orders/${wo.id}`,
   });
 
   return updated;
@@ -284,6 +362,7 @@ console.log('ASSIGN EMAIL DATA:', {
   tenantId: string,
   workOrderId: string,
   status: WorkOrderStatus,
+  userId: string,
 ) {
   const wo = await this.prisma.workOrder.findUnique({
     where: { id: workOrderId },
@@ -303,6 +382,30 @@ console.log('ASSIGN EMAIL DATA:', {
   if (!wo || wo.tenantId !== tenantId) {
     throw new ForbiddenException('Access denied');
   }
+
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+
+  if (!user) {
+    throw new ForbiddenException('User not found');
+  }
+
+  //PERMISSION MATRIX
+
+  if (user.role === Role.TECHNICIAN) {
+    if(wo.assignedTo !== userId){
+      throw new ForbiddenException('Technician can only update status of assigned work orders');
+    }
+  }
+  
+  if (user.role === Role.USER || user.role === Role.SUPERVISOR) {
+    if (wo.createdBy !== userId) {
+      throw new ForbiddenException('You can only update status of work orders you created');
+    }
+  }
+ 
 
   const updated = await this.prisma.workOrder.update({
     where: { id: workOrderId },
@@ -340,6 +443,26 @@ console.log('ASSIGN EMAIL DATA:', {
       workOrderId: wo.id,
     })
     .catch(err=>console.warn('Failed to send work order done email:', err.message));
+
+    const adminUsers = await this.prisma.user.findMany({
+      where: { tenantId, role: 'ADMIN' },
+      select: { id: true },
+    });
+
+    const pushUserIds = [
+      ...adminUsers.map(a => a.id),
+      wo.createdBy,
+      wo.assignedTo,
+    ].filter(Boolean) as string[];
+
+    await this.sendPushToUsers(pushUserIds, {
+      title: 'Work Order Completed',
+      body: `Work order "${wo.title}" has been marked as DONE.`,
+      url: `/work-orders/${wo.id}`,
+    });
+
+
+
   }
 
   return updated;
@@ -456,13 +579,34 @@ async update(
       wo: { ...wo, assignedTo: nextAssigned },
       technicianId: nextAssigned,
     });
+
+    const technician = await this.prisma.user.findUnique({
+    where: { id: nextAssigned },
+    select: { email: true },
+  });
+  
+
+
+  const adminUsers = await this.prisma.user.findMany({
+    where: { tenantId, role: 'ADMIN' },
+    select: { id: true },
+  });
+
+  const pushUserIds = [
+    ...adminUsers.map(a => a.id),
+    nextAssigned,
+    wo.createdBy,
+  ].filter(Boolean) as string[];
+
+  await this.sendPushToUsers(pushUserIds, {
+    title: 'Work Order Assigned',
+    body: `Work order "${wo.title}" has been assigned to ${technician?.email?? 'Technician'}.`,
+    url: `/work-orders/${wo.id}`,
+  });
+
+
   }
 
   return updated;
 }
-
-
-
-
-
 }

@@ -21,7 +21,7 @@ export class WorkOrderAttachmentsController {
     private readonly service: WorkOrderAttachmentsService,
   ) {}
 
-  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
+  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN','USER')
   @Post(':id/attachments')
   @UseInterceptors(FileInterceptor('file',{
     limits: {
@@ -38,7 +38,7 @@ export class WorkOrderAttachmentsController {
     return this.service.addAttachment(id, file);
   }
 
-  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN')
+  @Roles('ADMIN', 'SUPERVISOR', 'TECHNICIAN','USER')
   @Get(':id/attachments')
   getByWorkOrder(
     @Req() req: any,

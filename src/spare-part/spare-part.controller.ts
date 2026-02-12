@@ -19,7 +19,7 @@ import { Roles } from '../auth/roles.decorator';
 export class SparePartController {
   constructor(private service: SparePartService) {}
 
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER')
   @Post()
   create(@Req() req: any, @Body() body: any) {
     return this.service.create(req.user.tenantId, {
@@ -36,7 +36,7 @@ export class SparePartController {
     return this.service.findAll(req.user.tenantId);
   }
 
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER')
   @Patch(':id/stock')
   updateStock(
     @Req() req: any,
@@ -50,7 +50,7 @@ export class SparePartController {
     );
   }
 
-  @Roles('ADMIN', 'SUPERVISOR')
+  @Roles('ADMIN', 'SUPERVISOR','USER')
   @Delete(':id')
   remove(@Req() req: any, @Param('id') id: string) {
     return this.service.remove(req.user.tenantId, id);

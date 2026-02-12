@@ -17,7 +17,7 @@ import { Role } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN','SUPERVISOR') // 🔒 DEFAULT: ADMIN ONLY
+@Roles('ADMIN','SUPERVISOR','USER') // 🔒 DEFAULT: ADMIN ONLY
 export class UserController {
   constructor(private service: UserService) {}
 
@@ -28,12 +28,14 @@ export class UserController {
     @Body('email') email: string,
     @Body('password') password: string,
     @Body('role') role: Role,
+    @Body('name') name: string,
   ) {
     return this.service.createUser(
       req.user.tenantId,
       email,
       password,
       role,
+      name,
     );
   }
 

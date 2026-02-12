@@ -16,6 +16,7 @@ export class UserService {
     email: string,
     password: string,
     role: Role,
+    name: string,
   ) {
     const exists = await this.prisma.user.findUnique({
       where: { email },
@@ -33,6 +34,7 @@ export class UserService {
         email,
         password: hashed,
         role,
+        name,
       },
     });
   }

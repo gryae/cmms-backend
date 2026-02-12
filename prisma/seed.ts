@@ -23,6 +23,7 @@ async function main() {
       email: 'gerryfhb@gmail.com',
       password: hashedPassword,
       role: Role.ADMIN,
+      name: 'Gerry',
     },
   });
 

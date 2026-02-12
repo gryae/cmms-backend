@@ -10,7 +10,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async registerAdmin(tenantId: string, email: string, password: string) {
+  async registerAdmin(tenantId: string, email: string, password: string,name: string) {
     const hashed = await bcrypt.hash(password, 10);
 
     return this.prisma.user.create({
@@ -19,6 +19,7 @@ export class AuthService {
         email,
         password: hashed,
         role: 'ADMIN',
+        name,
       },
     });
   }
@@ -35,6 +36,8 @@ export class AuthService {
       sub: user.id,
       tenantId: user.tenantId,
       role: user.role,
+      email: user.email,
+      name: user.name,
     };
 
     return {

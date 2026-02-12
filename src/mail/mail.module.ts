@@ -17,7 +17,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
         },
       },
       defaults: {
-        from: '"CMMS System" <no-reply@cmms.local>',
+        from: '"LAPOR SKKKJ" <no-reply@cmms.local>',
       },
       template: {
         dir: process.cwd() + '/src/mail/templates',

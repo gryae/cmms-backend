@@ -21,6 +21,7 @@ enum Role {
   ADMIN
   SUPERVISOR
   TECHNICIAN
+  USER
 }
 
 model User {
@@ -28,6 +29,7 @@ model User {
   tenantId  String
   email     String   @unique
   password  String
+  name      String
   role      Role
   createdAt DateTime @default(now())
 
@@ -35,7 +37,10 @@ model User {
   workOrders        WorkOrder[]        @relation("AssignedWorkOrders") // 👈 TAMBAH INI
   comments          WorkOrderComment[] // 👈 TAMBAH INI
   createdWorkOrders WorkOrder[]        @relation("CreatedWorkOrders") // ✅
+  subscription  PushSubscription[]
 }
+
+
 
 model Asset {
   id       String @id @default(uuid())
@@ -63,7 +68,7 @@ enum WorkOrderStatus {
   ASSIGNED
   IN_PROGRESS
   DONE
-  CLOSED
+  OVERDUE
 }
 
 enum Priority {
@@ -152,4 +157,13 @@ model WorkOrderComment {
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
+}
+
+model PushSubscription{
+  id          String @id @default(uuid())
+  userId      String
+  endpoint    String @unique
+  keys        Json
+  createdAt   DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
 }
