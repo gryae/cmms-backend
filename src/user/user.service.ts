@@ -47,6 +47,7 @@ export class UserService {
         email: true,
         role: true,
         createdAt: true,
+        name:true,
       },
     });
   }
@@ -96,4 +97,51 @@ export class UserService {
       where: { id: userId },
     });
   }
+
+  async updateUser(
+  tenantId: string,
+  userId: string,
+  email: string,
+  name: string,
+  role: Role,
+  password?: string,
+) {
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.tenantId !== tenantId) {
+    throw new ForbiddenException();
+  }
+
+  if (user.role === 'ADMIN' && role !== 'ADMIN') {
+    throw new ForbiddenException('Admin role cannot be changed');
+  }
+
+  // cek email kalau berubah
+  if (email !== user.email) {
+    const emailUsed = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (emailUsed) {
+      throw new BadRequestException('Email already used');
+    }
+  }
+
+  let hashedPassword;
+
+  if (password) {
+    hashedPassword = await bcrypt.hash(password, 10);
+  }
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: {
+      email,
+      name,
+      role,
+      ...(hashedPassword && { password: hashedPassword }),
+    },
+  });
+}
 }

@@ -208,6 +208,7 @@ async findAll(tenantId: string) {
           id: true,
           email: true,
           role: true,
+          name: true,
         },
       },
       creator:{

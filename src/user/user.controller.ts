@@ -70,4 +70,26 @@ export class UserController {
       id,
     );
   }
+
+// ================= UPDATE USER =================
+@Patch(':id')
+updateUser(
+  @Req() req: any,
+  @Param('id') id: string,
+  @Body('email') email: string,
+  @Body('name') name: string,
+  @Body('role') role: Role,
+  @Body('password') password?: string,
+) {
+  return this.service.updateUser(
+    req.user.tenantId,
+    id,
+    email,
+    name,
+    role,
+    password,
+  );
+}
+
+
 }
