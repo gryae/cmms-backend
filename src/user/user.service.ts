@@ -17,6 +17,7 @@ export class UserService {
     password: string,
     role: Role,
     name: string,
+    phoneNumber: string,
   ) {
     const exists = await this.prisma.user.findUnique({
       where: { email },
@@ -35,6 +36,7 @@ export class UserService {
         password: hashed,
         role,
         name,
+        phoneNumber,
       },
     });
   }
@@ -48,6 +50,7 @@ export class UserService {
         role: true,
         createdAt: true,
         name:true,
+        phoneNumber:true,
       },
     });
   }
@@ -105,6 +108,7 @@ export class UserService {
   name: string,
   role: Role,
   password?: string,
+  phoneNumber?: string,
 ) {
   const user = await this.prisma.user.findUnique({
     where: { id: userId },
@@ -138,6 +142,7 @@ export class UserService {
     where: { id: userId },
     data: {
       email,
+      phoneNumber,
       name,
       role,
       ...(hashedPassword && { password: hashedPassword }),

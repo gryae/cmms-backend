@@ -209,6 +209,7 @@ async findAll(tenantId: string) {
           email: true,
           role: true,
           name: true,
+          phoneNumber:true,
         },
       },
       creator:{

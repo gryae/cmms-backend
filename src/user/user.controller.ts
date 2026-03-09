@@ -29,6 +29,7 @@ export class UserController {
     @Body('password') password: string,
     @Body('role') role: Role,
     @Body('name') name: string,
+    @Body('phoneNumber') phoneNumber: string,
   ) {
     return this.service.createUser(
       req.user.tenantId,
@@ -36,6 +37,7 @@ export class UserController {
       password,
       role,
       name,
+      phoneNumber,
     );
   }
 
@@ -80,6 +82,7 @@ updateUser(
   @Body('name') name: string,
   @Body('role') role: Role,
   @Body('password') password?: string,
+  @Body('phoneNumber') phoneNumber?: string,
 ) {
   return this.service.updateUser(
     req.user.tenantId,
@@ -88,6 +91,7 @@ updateUser(
     name,
     role,
     password,
+    phoneNumber
   );
 }
 

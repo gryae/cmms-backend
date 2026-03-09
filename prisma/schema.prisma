@@ -32,6 +32,7 @@ model User {
   name      String
   role      Role
   createdAt DateTime @default(now())
+  phoneNumber String?
 
   tenant            Tenant             @relation(fields: [tenantId], references: [id])
   workOrders        WorkOrder[]        @relation("AssignedWorkOrders") // 👈 TAMBAH INI

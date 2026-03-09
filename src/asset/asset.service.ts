@@ -160,56 +160,141 @@ export class AssetService {
   /////////BULK IMPORT/////////////////////
 
 // ================= IMPORT CSV (🔥 FIXED & STABLE) =================
-  async importCsv(tenantId: string, buffer: Buffer) {
-    const content = buffer.toString('utf8');
+  // async importCsv(tenantId: string, buffer: Buffer) {
+  //   const content = buffer.toString('utf8');
 
-    const records: any[] = parse(content, {
-      columns: true,
-      skip_empty_lines: true,
-      bom: true, // 🔥 HANDLE BOM
-      trim: true,
-      delimiter: [',', '\t', ';']
+  //   const records: any[] = parse(content, {
+  //     columns: true,
+  //     skip_empty_lines: true,
+  //     bom: true, // 🔥 HANDLE BOM
+  //     trim: true,
+  //     delimiter: [',', '\t', ';']
+  //   });
+
+  //   let created = 0;
+  //   let skipped = 0;
+
+  //   const normalize = (v?: any) =>
+  //     v === undefined || v === null
+  //       ? ''
+  //       : String(v).trim();
+
+  //   for (const row of records) {
+      
+  //     const name = normalize(row.name);
+  //     const code = normalize(row.code);
+  //     const branch = normalize(row.branch);
+  //     const location = normalize(row.location);
+  //     const procurementYear = Number(
+  //       normalize(row.procurementYear),
+  //     );
+  //     const category = normalize(row.category) || 'GENERAL';
+
+  //     // 🔒 BASIC VALIDATION
+  //     if (!name || !code || !branch || !procurementYear) {
+  //       skipped++;
+  //       continue;
+  //     }
+
+  //     // 🔁 DUPLICATE CHECK (PER TENANT)
+  //     const exists = await this.prisma.asset.findFirst({
+  //       where: {
+  //         tenantId,
+  //         code,
+  //       },
+  //     });
+
+  //     if (exists) {
+  //       skipped++;
+  //       continue;
+  //     }
+
+  //     // ✅ CREATE
+  //     await this.prisma.asset.create({
+  //       data: {
+  //         tenantId,
+  //         name,
+  //         code,
+  //         branch,
+  //         location,
+  //         procurementYear,
+  //         category,
+  //       },
+  //     });
+
+  //     created++;
+  //   }
+
+  //   return {
+  //     created,
+  //     skipped,
+  //     total: records.length,
+  //   };
+  // }
+
+  async importCsv(tenantId: string, buffer: Buffer) {
+
+  const content = buffer.toString('utf8');
+
+  const records: any[] = parse(content, {
+    columns: (header: string[]) =>
+      header.map((h) => h.trim()),
+
+    skip_empty_lines: true,
+    bom: true,
+    trim: true,
+
+    // 🔥 HANDLE CSV ANEH
+    relax_column_count: true,
+    skip_records_with_error: true,
+
+    // 🔥 AUTO DETECT DELIMITER
+    delimiter: [';'],
+
+  });
+
+  let created = 0;
+  let skipped = 0;
+
+  const normalize = (v?: any) =>
+    v === undefined || v === null
+      ? ''
+      : String(v).trim();
+
+  for (const row of records) {
+
+    const name = normalize(row.name);
+    const code = normalize(row.code);
+    const branch = normalize(row.branch);
+    const location = normalize(row.location);
+
+    const procurementYear = Number(
+      normalize(row.procurementYear),
+    );
+
+    const category = normalize(row.category) || 'GENERAL';
+
+    // 🔒 BASIC VALIDATION
+    if (!name || !code || !branch || !procurementYear) {
+      skipped++;
+      continue;
+    }
+
+    // 🔁 DUPLICATE CHECK
+    const exists = await this.prisma.asset.findFirst({
+      where: {
+        tenantId,
+        code,
+      },
     });
 
-    let created = 0;
-    let skipped = 0;
+    if (exists) {
+      skipped++;
+      continue;
+    }
 
-    const normalize = (v?: any) =>
-      v === undefined || v === null
-        ? ''
-        : String(v).trim();
+    try {
 
-    for (const row of records) {
-      
-      const name = normalize(row.name);
-      const code = normalize(row.code);
-      const branch = normalize(row.branch);
-      const location = normalize(row.location);
-      const procurementYear = Number(
-        normalize(row.procurementYear),
-      );
-      const category = normalize(row.category) || 'GENERAL';
-
-      // 🔒 BASIC VALIDATION
-      if (!name || !code || !branch || !procurementYear) {
-        skipped++;
-        continue;
-      }
-
-      // 🔁 DUPLICATE CHECK (PER TENANT)
-      const exists = await this.prisma.asset.findFirst({
-        where: {
-          tenantId,
-          code,
-        },
-      });
-
-      if (exists) {
-        skipped++;
-        continue;
-      }
-
-      // ✅ CREATE
       await this.prisma.asset.create({
         data: {
           tenantId,
@@ -223,12 +308,21 @@ export class AssetService {
       });
 
       created++;
+
+    } catch (e) {
+
+      // 🔥 kalau row rusak jangan crash
+      skipped++;
+
     }
 
-    return {
-      created,
-      skipped,
-      total: records.length,
-    };
   }
+
+  return {
+    created,
+    skipped,
+    total: records.length,
+  };
+
+}
 }
