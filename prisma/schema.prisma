@@ -81,6 +81,14 @@ enum Priority {
   EMERGENCY
 }
 
+enum unit {
+  TK
+  SD
+  SMP
+  SMA
+  NonUnit
+}
+
 model WorkOrder {
   id          String          @id @default(uuid())
   tenantId    String
@@ -89,6 +97,7 @@ model WorkOrder {
   priority    Priority
   status      WorkOrderStatus @default(OPEN)
   completedAt DateTime?
+  unit        String @default("NonUnit")
 
   assetId    String?
   assignedTo String?

@@ -88,43 +88,43 @@ export class AssetService {
   }
 
   // ================= DELETE (SAFE) =================
-  // async delete(tenantId: string, id: string) {
-  //   const asset = await this.prisma.asset.findFirst({
-  //     where: { id, tenantId },
-  //     include: {
-  //       workOrders: true,
-  //     },
-  //   });
-
-  //   if (!asset) {
-  //     throw new ForbiddenException('Asset not found');
-  //   }
-
-  //   if (asset.workOrders.length > 0) {
-  //     throw new ForbiddenException(
-  //       'Cannot delete asset that is used in work orders',
-  //     );
-  //   }
-
-  //   return this.prisma.asset.delete({
-  //     where: { id },
-  //   });
-  // }
-
   async delete(tenantId: string, id: string) {
-  const asset = await this.prisma.asset.findUnique({
-    where: { id },
-  });
+    const asset = await this.prisma.asset.findFirst({
+      where: { id, tenantId },
+      include: {
+        workOrders: true,
+      },
+    });
 
-  if (!asset || asset.tenantId !== tenantId) {
-    throw new ForbiddenException('Access denied');
+    if (!asset) {
+      throw new ForbiddenException('Asset not found');
+    }
+
+    if (asset.workOrders.length > 0) {
+      throw new ForbiddenException(
+        'Cannot delete asset that is used in work orders',
+      );
+    }
+
+    return this.prisma.asset.delete({
+      where: { id },
+    });
   }
 
-  return this.prisma.asset.update({
-    where: { id },
-    data: { isActive: false },   // 🔥 Soft delete
-  });
-}
+//   async delete(tenantId: string, id: string) {
+//   const asset = await this.prisma.asset.findUnique({
+//     where: { id },
+//   });
+
+//   if (!asset || asset.tenantId !== tenantId) {
+//     throw new ForbiddenException('Access denied');
+//   }
+
+//   return this.prisma.asset.update({
+//     where: { id },
+//     data: { isActive: false },   // 🔥 Soft delete
+//   });
+// }
 
 
 

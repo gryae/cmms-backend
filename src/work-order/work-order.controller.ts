@@ -30,6 +30,7 @@ export class WorkOrderController {
       assetId: body.assetId,
       assignedTo: body.assignedTo,
       dueDate:body.dueDate,
+      unit: body.unit,
     });
   }
 

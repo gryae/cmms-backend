@@ -105,6 +105,7 @@ private async sendAssignEmail(params: {
     assetId?: string;
     assignedTo?: string;
     dueDate?: string;
+    unit?: string;
   },
 ) {
   const status = data.assignedTo
@@ -131,6 +132,7 @@ const wo = await this.prisma.workOrder.create({
     status,
     dueDate: data.dueDate ? new Date(data.dueDate) : null,
     createdBy:creatorUserId,
+    unit: data.unit,
   },
   include: {
     asset: true,
@@ -535,6 +537,7 @@ async update(
     assignedTo?: string | null;
     dueDate?: string | null;
     status?: WorkOrderStatus;
+    unit?: string;
   },
 ) {
   const wo = await this.prisma.workOrder.findUnique({
@@ -566,6 +569,7 @@ async update(
         ? null
         : undefined,
       status: data.status,
+      unit: data.unit,
     },
   });
 

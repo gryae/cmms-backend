@@ -68,9 +68,9 @@ export class UserService {
       throw new ForbiddenException();
     }
 
-    if (user.role === 'ADMIN') {
+    if (user.email === process.env.SUPER_ADMIN_EMAIL) {
       throw new ForbiddenException(
-        'Admin role cannot be changed',
+        'Super Admin role cannot be changed',
       );
     }
 
@@ -90,9 +90,9 @@ export class UserService {
       throw new ForbiddenException();
     }
 
-    if (user.role === 'ADMIN') {
+    if (user.email === process.env.SUPER_ADMIN_EMAIL) {
       throw new ForbiddenException(
-        'Admin cannot be deleted',
+        'Super Admin cannot be deleted',
       );
     }
 
@@ -118,8 +118,8 @@ export class UserService {
     throw new ForbiddenException();
   }
 
-  if (user.role === 'ADMIN' && role !== 'ADMIN') {
-    throw new ForbiddenException('Admin role cannot be changed');
+  if (user.email === process.env.SUPER_ADMIN_EMAIL && role !== 'ADMIN') {
+    throw new ForbiddenException('Super Admin role cannot be changed');
   }
 
   // cek email kalau berubah
