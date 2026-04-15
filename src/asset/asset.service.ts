@@ -54,7 +54,10 @@ export class AssetService {
             id: true,
             title: true,
             status: true,
+            createdAt: true,
+            completedAt: true,
           },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

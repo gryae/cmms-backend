@@ -413,7 +413,7 @@ if (!creator) {
 
   const updated = await this.prisma.workOrder.update({
     where: { id: workOrderId },
-    data: { status },
+    data, // ✅ includes completedAt when status === DONE
   });
 
   // 🔔 KIRIM EMAIL JIKA DONE
